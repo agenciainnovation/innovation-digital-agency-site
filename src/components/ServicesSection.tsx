@@ -63,8 +63,8 @@ const ServicesSection = () => {
         <div className="text-center mt-16 animate-fade-in-up" style={{
         animationDelay: '0.8s'
       }}>
-          <div className="inline-flex items-center py-3 bg-innovation-yellow/10 border border-innovation-yellow/30 rounded-full px-[134px]">
-            <span className="text-innovation-yellow px-0 font-medium mx-0">
+          <div className="inline-flex items-center bg-innovation-yellow/10 border border-innovation-yellow/30 rounded-full py-0 px-0">
+            <span className="text-innovation-yellow px-0 font-medium mx-0 text-base">
               ✨ Personalizamos cada estratégia para as necessidades do seu negócio
             </span>
           </div>
