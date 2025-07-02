@@ -64,7 +64,7 @@ const ServicesSection = () => {
         animationDelay: '0.8s'
       }}>
           <div className="inline-flex items-center bg-innovation-yellow/10 border border-innovation-yellow/30 rounded-full py-0 px-0">
-            <span className="text-innovation-yellow px-0 font-medium mx-0 text-base">
+            <span className="text-innovation-yellow font-medium mx-0 text-base px-[60px] py-[15px]">
               ✨ Personalizamos cada estratégia para as necessidades do seu negócio
             </span>
           </div>
