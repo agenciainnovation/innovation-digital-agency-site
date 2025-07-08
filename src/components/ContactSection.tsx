@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Instagram, Facebook, Linkedin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ContactSection = () => {
@@ -38,16 +39,18 @@ Data: ${new Date().toLocaleString('pt-BR')}
       window.location.href = mailtoLink;
       
       toast({
-        title: "Cliente de email aberto!",
-        description: "Seu cliente de email foi aberto com a mensagem preenchida. Complete o envio por lá."
+        title: "✅ Mensagem enviada com sucesso!",
+        description: "Seu cliente de email foi aberto com a mensagem preenchida. Obrigado pelo contato!",
+        duration: 8000,
       });
       
       setFormData({ name: '', email: '', message: '' });
     } catch (error) {
       toast({
-        title: "Erro ao abrir cliente de email",
+        title: "❌ Erro ao enviar mensagem",
         description: "Tente novamente ou entre em contato via WhatsApp.",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 8000,
       });
     } finally {
       setIsSubmitting(false);
@@ -78,16 +81,18 @@ Data: ${new Date().toLocaleString('pt-BR')}
       window.location.href = mailtoLink;
       
       toast({
-        title: "Cliente de email aberto!",
-        description: "Seu cliente de email foi aberto para processar a inscrição na newsletter."
+        title: "🎉 Inscrito com sucesso!",
+        description: "Bem-vindo à nossa newsletter! Você receberá dicas exclusivas em breve.",
+        duration: 8000,
       });
       
       setNewsletterEmail('');
     } catch (error) {
       toast({
-        title: "Erro na inscrição",
+        title: "❌ Erro na inscrição",
         description: "Tente novamente mais tarde.",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 8000,
       });
     }
   };
@@ -259,7 +264,7 @@ Data: ${new Date().toLocaleString('pt-BR')}
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
                   >
-                    <span className="text-white font-bold">IG</span>
+                    <Instagram className="w-6 h-6 text-white" />
                   </a>
                   <a 
                     href="https://facebook.com/agenciainnovationbr" 
@@ -267,7 +272,7 @@ Data: ${new Date().toLocaleString('pt-BR')}
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
                   >
-                    <span className="text-white font-bold">FB</span>
+                    <Facebook className="w-6 h-6 text-white" />
                   </a>
                   <a 
                     href="https://linkedin.com/company/agenciainnovationbr" 
@@ -275,7 +280,7 @@ Data: ${new Date().toLocaleString('pt-BR')}
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-blue-700 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
                   >
-                    <span className="text-white font-bold">IN</span>
+                    <Linkedin className="w-6 h-6 text-white" />
                   </a>
                 </div>
               </div>

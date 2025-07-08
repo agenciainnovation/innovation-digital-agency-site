@@ -1,3 +1,6 @@
+
+import { Instagram, Facebook, Linkedin } from 'lucide-react';
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const scrollToTop = () => {
@@ -14,7 +17,8 @@ const Footer = () => {
       });
     }
   };
-  return <footer className="bg-innovation-black border-t border-innovation-gray/20">
+  return (
+    <footer className="bg-innovation-black border-t border-innovation-gray/20">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and description */}
@@ -88,13 +92,13 @@ const Footer = () => {
               <h4 className="text-white font-medium mb-4">Redes Sociais</h4>
               <div className="flex space-x-4">
                 <a href="https://instagram.com/agenciainnovationbr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
-                  <span className="text-white font-bold text-sm">IG</span>
+                  <Instagram className="w-5 h-5 text-white" />
                 </a>
                 <a href="https://facebook.com/agenciainnovationbr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
-                  <span className="text-white font-bold text-sm">FB</span>
+                  <Facebook className="w-5 h-5 text-white" />
                 </a>
                 <a href="https://linkedin.com/company/agenciainnovationbr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
-                  <span className="text-white font-bold text-sm">IN</span>
+                  <Linkedin className="w-5 h-5 text-white" />
                 </a>
               </div>
             </div>
@@ -116,6 +120,8 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>;
+    </footer>
+  );
 };
+
 export default Footer;
