@@ -13,19 +13,6 @@ const HeroSection = () => {
 
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-innovation-black">
-      {/* Background image with overlay */}
-      <div className="absolute inset-0">
-        <img 
-          src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1920&h=1080&fit=crop&crop=center" 
-          alt="Technology Background" 
-          className="w-full h-full object-cover"
-        />
-        {/* Dark overlay to maintain readability */}
-        <div className="absolute inset-0 bg-innovation-black/80"></div>
-        {/* Gradient overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-innovation-black/60 via-transparent to-innovation-black/60"></div>
-      </div>
-
       {/* Floating background elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-72 h-72 bg-innovation-yellow rounded-full blur-3xl animate-float"></div>
@@ -37,12 +24,12 @@ const HeroSection = () => {
       {/* Hero content */}
       <div className="container mx-auto px-4 py-20 text-center relative z-10 my-[100px]">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in-up drop-shadow-lg">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in-up">
             Inovação que conecta{' '}
             <span className="text-innovation-yellow">marcas ao futuro</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed animate-fade-in-up drop-shadow-md" style={{
+          <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed animate-fade-in-up" style={{
             animationDelay: '0.2s'
           }}>
             Transformamos sua presença digital com estratégias inteligentes, 
@@ -65,16 +52,16 @@ const HeroSection = () => {
             animationDelay: '0.6s'
           }}>
             <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/15 transition-all duration-300 shadow-lg">
-              <div className="text-3xl font-bold text-innovation-yellow mb-2 drop-shadow-sm">+150</div>
-              <div className="text-white/90 drop-shadow-sm">Projetos Entregues</div>
+              <div className="text-3xl font-bold text-innovation-yellow mb-2">+150</div>
+              <div className="text-white/90">Projetos Entregues</div>
             </div>
             <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/15 transition-all duration-300 shadow-lg">
-              <div className="text-3xl font-bold text-innovation-yellow mb-2 drop-shadow-sm">98%</div>
-              <div className="text-white/90 drop-shadow-sm">Satisfação dos Clientes</div>
+              <div className="text-3xl font-bold text-innovation-yellow mb-2">98%</div>
+              <div className="text-white/90">Satisfação dos Clientes</div>
             </div>
             <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/15 transition-all duration-300 shadow-lg">
-              <div className="text-3xl font-bold text-innovation-yellow mb-2 drop-shadow-sm">5+</div>
-              <div className="text-white/90 drop-shadow-sm">Anos de Experiência</div>
+              <div className="text-3xl font-bold text-innovation-yellow mb-2">5+</div>
+              <div className="text-white/90">Anos de Experiência</div>
             </div>
           </div>
         </div>
