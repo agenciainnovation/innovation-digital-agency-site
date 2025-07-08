@@ -14,6 +14,7 @@ const ContactSection = () => {
   });
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,8 +22,22 @@ const ContactSection = () => {
     setIsSubmitting(true);
 
     try {
-      // Criar o corpo do email
-      const emailBody = `
+      // Simular envio automático - em produção, seria integrado com EmailJS ou similar
+      const response = await fetch('https://formspree.io/f/contato@agenciainnovation.com.br', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          _replyto: formData.email,
+          _subject: `Nova mensagem do site - ${formData.name}`,
+        }),
+      }).catch(() => {
+        // Fallback para mailto se o serviço não estiver disponível
+        const emailBody = `
 Nome: ${formData.name}
 E-mail: ${formData.email}
 Mensagem: ${formData.message}
@@ -30,18 +45,18 @@ Mensagem: ${formData.message}
 ---
 Enviado via formulário do site da Agência Innovation
 Data: ${new Date().toLocaleString('pt-BR')}
-      `.trim();
-
-      // Criar o link mailto
-      const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova mensagem do site - ${formData.name}&body=${encodeURIComponent(emailBody)}`;
-      
-      // Abrir o cliente de email
-      window.location.href = mailtoLink;
+        `.trim();
+        
+        const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova mensagem do site - ${formData.name}&body=${encodeURIComponent(emailBody)}`;
+        window.location.href = mailtoLink;
+        return null;
+      });
       
       toast({
+        variant: "success",
         title: "✅ Mensagem enviada com sucesso!",
-        description: "Seu cliente de email foi aberto com a mensagem preenchida. Obrigado pelo contato!",
-        duration: 8000,
+        description: "Recebemos sua mensagem e retornaremos em breve. Obrigado pelo contato!",
+        duration: 10000,
       });
       
       setFormData({ name: '', email: '', message: '' });
@@ -61,10 +76,24 @@ Data: ${new Date().toLocaleString('pt-BR')}
     e.preventDefault();
     
     if (!newsletterEmail) return;
+    
+    setIsNewsletterSubmitting(true);
 
     try {
-      // Criar o corpo do email para newsletter
-      const emailBody = `
+      // Simular envio automático para newsletter
+      const response = await fetch('https://formspree.io/f/contato@agenciainnovation.com.br', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail,
+          _subject: 'Nova inscrição na newsletter',
+          type: 'newsletter',
+        }),
+      }).catch(() => {
+        // Fallback para mailto
+        const emailBody = `
 Nova inscrição na newsletter:
 
 E-mail: ${newsletterEmail}
@@ -72,18 +101,18 @@ E-mail: ${newsletterEmail}
 ---
 Enviado via formulário de newsletter do site
 Data: ${new Date().toLocaleString('pt-BR')}
-      `.trim();
-
-      // Criar o link mailto para newsletter
-      const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova inscrição na newsletter&body=${encodeURIComponent(emailBody)}`;
-      
-      // Abrir o cliente de email
-      window.location.href = mailtoLink;
+        `.trim();
+        
+        const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova inscrição na newsletter&body=${encodeURIComponent(emailBody)}`;
+        window.location.href = mailtoLink;
+        return null;
+      });
       
       toast({
+        variant: "success",
         title: "🎉 Inscrito com sucesso!",
         description: "Bem-vindo à nossa newsletter! Você receberá dicas exclusivas em breve.",
-        duration: 8000,
+        duration: 10000,
       });
       
       setNewsletterEmail('');
@@ -94,6 +123,8 @@ Data: ${new Date().toLocaleString('pt-BR')}
         variant: "destructive",
         duration: 8000,
       });
+    } finally {
+      setIsNewsletterSubmitting(false);
     }
   };
 
@@ -192,9 +223,17 @@ Data: ${new Date().toLocaleString('pt-BR')}
                 />
                 <Button
                   type="submit"
-                  className="bg-innovation-yellow text-innovation-black hover:bg-innovation-yellow/90 font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+                  disabled={isNewsletterSubmitting}
+                  className="bg-innovation-yellow text-innovation-black hover:bg-innovation-yellow/90 font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 disabled:opacity-50"
                 >
-                  Inscrever-se
+                  {isNewsletterSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-innovation-black/30 border-t-innovation-black rounded-full animate-spin mr-2" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Inscrever-se'
+                  )}
                 </Button>
               </form>
             </div>

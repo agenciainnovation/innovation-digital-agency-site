@@ -7,7 +7,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 10000 // Aumentado para 10 segundos
+const TOAST_REMOVE_DELAY = 12000 // Aumentado para 12 segundos para melhor visibilidade
 
 type ToasterToast = ToastProps & {
   id: string
@@ -140,7 +140,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ variant = "default", ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -155,6 +155,7 @@ function toast({ ...props }: Toast) {
     toast: {
       ...props,
       id,
+      variant,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss()
