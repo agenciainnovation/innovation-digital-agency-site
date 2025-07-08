@@ -24,19 +24,35 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Criar o corpo do email
+      const emailBody = `
+Nome: ${formData.name}
+E-mail: ${formData.email}
+Assunto: ${formData.subject}
+Mensagem: ${formData.message}
+
+---
+Enviado via página de contato do site da Agência Innovation
+Data: ${new Date().toLocaleString('pt-BR')}
+      `.trim();
+
+      // Criar o link mailto
+      const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Contato via site - ${formData.subject || formData.name}&body=${encodeURIComponent(emailBody)}`;
+      
+      // Abrir o cliente de email
+      window.location.href = mailtoLink;
       
       toast({
-        title: "Mensagem enviada com sucesso!",
-        description: "Entraremos em contato em breve. Obrigado pelo interesse!",
+        title: "Cliente de email aberto!",
+        description: "Seu cliente de email foi aberto com a mensagem preenchida. Complete o envio por lá."
       });
       
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
       toast({
-        title: "Erro ao enviar mensagem",
+        title: "Erro ao abrir cliente de email",
         description: "Tente novamente ou entre em contato via WhatsApp.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -49,11 +65,26 @@ const Contact = () => {
     if (!newsletterEmail) return;
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Criar o corpo do email para newsletter
+      const emailBody = `
+Nova inscrição na newsletter:
+
+E-mail: ${newsletterEmail}
+
+---
+Enviado via página de contato do site
+Data: ${new Date().toLocaleString('pt-BR')}
+      `.trim();
+
+      // Criar o link mailto para newsletter
+      const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova inscrição na newsletter&body=${encodeURIComponent(emailBody)}`;
+      
+      // Abrir o cliente de email
+      window.location.href = mailtoLink;
       
       toast({
-        title: "Inscrição realizada!",
-        description: "Você receberá nossas novidades em primeira mão.",
+        title: "Cliente de email aberto!",
+        description: "Seu cliente de email foi aberto para processar a inscrição na newsletter."
       });
       
       setNewsletterEmail('');
@@ -61,7 +92,7 @@ const Contact = () => {
       toast({
         title: "Erro na inscrição",
         description: "Tente novamente mais tarde.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
