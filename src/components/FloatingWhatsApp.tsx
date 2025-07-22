@@ -1,8 +1,23 @@
 
 import { MessageCircle } from 'lucide-react';
 
+// Declare gtag function type
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
+
 const FloatingWhatsApp = () => {
   const handleWhatsAppClick = () => {
+    // Track WhatsApp click event
+    if (typeof window.gtag !== 'undefined') {
+      window.gtag('event', 'click', {
+        event_category: 'Contact',
+        event_label: 'WhatsApp Floating Button',
+        transport_type: 'beacon'
+      });
+    }
     window.open('https://wa.me/5511973473423', '_blank');
   };
 
