@@ -1,79 +1,53 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom color palette for Agência Innovation */
+/* Design System — Agência Innovation */
 
 @layer base {
   :root {
-    /* HSL triplets consumed by Tailwind as hsl(var(--x)) */
-    /* #1d1d1b - black absolute */
-    --background: 60 4% 11%;
-    /* #fee619 - vibrant yellow */
-    --foreground: 54 99% 55%;
+    /* #0F0F10 — fundo principal */
+    --background: 240 3% 6%;
+    /* #FFFFFF — texto principal */
+    --foreground: 0 0% 100%;
 
-    --card: 60 4% 11%;
-    --card-foreground: 54 99% 55%;
+    /* #1A1A1C — superfícies */
+    --card: 240 4% 11%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 249 4% 32%; /* #4f4e55 - sophisticated gray */
-    --popover-foreground: 54 99% 55%;
+    --popover: 240 4% 11%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 54 99% 55%; /* #fee619 - vibrant yellow */
-    --primary-foreground: 60 4% 11%;
+    /* #FFE600 — amarelo da marca */
+    --primary: 55 100% 50%;
+    --primary-foreground: 240 3% 6%;
 
-    --secondary: 249 4% 32%; /* #4f4e55 - sophisticated gray */
-    --secondary-foreground: 54 99% 55%;
+    --secondary: 240 4% 11%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 249 4% 32%;
-    --muted-foreground: 0 0% 78%;
+    --muted: 240 4% 11%;
+    /* #D4D4D8 — texto secundário (contraste AA) */
+    --muted-foreground: 240 5% 84%;
 
-    --accent: 54 99% 55%;
-    --accent-foreground: 60 4% 11%;
+    --accent: 55 100% 50%;
+    --accent-foreground: 240 3% 6%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 249 4% 32%;
-    --input: 249 4% 32%;
-    --ring: 54 99% 55%;
+    --border: 240 4% 18%;
+    --input: 240 4% 18%;
+    --ring: 55 100% 50%;
 
     --radius: 1rem;
 
-    /* Innovation custom colors */
-    --innovation-yellow: 54 99% 55%; /* #fee619 */
-    --innovation-gray: 249 4% 32%; /* #4f4e55 */
-    --innovation-black: 60 4% 11%; /* #1d1d1b */
-  }
+    /* Seções claras: #F7F7F5 */
+    --light-section: 60 9% 96%;
 
-  .dark {
-    --background: 60 4% 11%;
-    --foreground: 54 99% 55%;
-
-    --card: 60 4% 11%;
-    --card-foreground: 54 99% 55%;
-
-    --popover: 249 4% 32%;
-    --popover-foreground: 54 99% 55%;
-
-    --primary: 54 99% 55%;
-    --primary-foreground: 60 4% 11%;
-
-    --secondary: 249 4% 32%;
-    --secondary-foreground: 54 99% 55%;
-
-    --muted: 249 4% 32%;
-    --muted-foreground: 0 0% 78%;
-
-    --accent: 54 99% 55%;
-    --accent-foreground: 60 4% 11%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 249 4% 32%;
-    --input: 249 4% 32%;
-    --ring: 54 99% 55%;
+    /* Cores da marca */
+    --innovation-yellow: 55 100% 50%; /* #FFE600 */
+    --innovation-gray: 240 4% 11%; /* #1A1A1C */
+    --innovation-black: 240 3% 6%; /* #0F0F10 */
   }
 }
 
@@ -83,15 +57,40 @@
   }
 
   body {
-    @apply bg-background text-foreground font-poppins;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
   }
 
   html {
     scroll-behavior: smooth;
   }
+
+  /* Foco visível para acessibilidade */
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
 }
 
-/* Custom animations */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Brilho amarelo sutil */
+  .glow-yellow {
+    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.35);
+  }
+
+  .glow-yellow-sm {
+    box-shadow: 0 0 24px -8px hsl(var(--primary) / 0.3);
+  }
+}
+
+/* Animações */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -121,6 +120,15 @@
   }
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
 }
@@ -131,4 +139,20 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Respeitar prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
