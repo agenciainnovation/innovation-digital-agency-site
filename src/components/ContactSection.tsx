@@ -1,69 +1,109 @@
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Mail, Phone, MapPin, Send, Instagram, Facebook, Linkedin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { contact, socials, services, whatsappLink } from "@/data/siteData";
+import { trackEvent, getUtmParams } from "@/lib/tracking";
+import FadeUp from "@/components/FadeUp";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin, Send, Instagram, Facebook, Linkedin } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Informe seu nome").max(100, "Nome muito longo"),
+  email: z.string().trim().email("E-mail inválido").max(255, "E-mail muito longo"),
+  whatsapp: z.string().trim().max(20, "Número muito longo").optional().or(z.literal("")),
+  company: z.string().trim().max(100, "Nome muito longo").optional().or(z.literal("")),
+  service: z.string().optional().or(z.literal("")),
+  message: z.string().trim().min(1, "Escreva sua mensagem").max(1000, "Mensagem muito longa"),
+  lgpd: z.boolean().refine((v) => v === true, "É necessário aceitar a política de privacidade"),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
+
+const initialForm: ContactFormData = {
+  name: "",
+  email: "",
+  whatsapp: "",
+  company: "",
+  service: "",
+  message: "",
+  lgpd: false,
+};
 
 const ContactSection = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [formData, setFormData] = useState<ContactFormData>(initialForm);
+  const [honeypot, setHoneypot] = useState("");
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Pré-seleção de serviço vinda dos cards de serviços
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const service = (e as CustomEvent<string>).detail;
+      setFormData((prev) => ({ ...prev, service }));
+    };
+    window.addEventListener("preselect-service", handler);
+    return () => window.removeEventListener("preselect-service", handler);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot anti-spam: se preenchido, é robô — ignora silenciosamente
+    if (honeypot) return;
+
+    const result = contactSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof ContactFormData;
+        if (!fieldErrors[field]) fieldErrors[field] = issue.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
     setIsSubmitting(true);
 
     try {
-      // Simular envio automático - em produção, seria integrado com EmailJS ou similar
-      const response = await fetch('https://formspree.io/f/contato@agenciainnovation.com.br', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-          _replyto: formData.email,
-          _subject: `Nova mensagem do site - ${formData.name}`,
-        }),
-      }).catch(() => {
-        // Fallback para mailto se o serviço não estiver disponível
-        const emailBody = `
-Nome: ${formData.name}
-E-mail: ${formData.email}
-Mensagem: ${formData.message}
-
----
-Enviado via formulário do site da Agência Innovation
-Data: ${new Date().toLocaleString('pt-BR')}
-        `.trim();
-        
-        const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova mensagem do site - ${formData.name}&body=${encodeURIComponent(emailBody)}`;
-        window.location.href = mailtoLink;
-        return null;
+      const utms = getUtmParams();
+      const { error } = await supabase.from("leads").insert({
+        name: result.data.name,
+        email: result.data.email,
+        whatsapp: result.data.whatsapp || null,
+        company: result.data.company || null,
+        service: result.data.service || null,
+        message: result.data.message,
+        ...utms,
       });
-      
+
+      if (error) throw error;
+
+      trackEvent("form_submit", { form: "contato" });
       toast({
         variant: "success",
-        title: "✅ Mensagem enviada com sucesso!",
-        description: "Recebemos sua mensagem e retornaremos em breve. Obrigado pelo contato!",
-        duration: 10000,
+        title: "Mensagem enviada com sucesso!",
+        description:
+          "Recebemos seu contato. Nosso time retornará em breve pelo e-mail ou WhatsApp informado.",
+        duration: 12000,
       });
-      
-      setFormData({ name: '', email: '', message: '' });
-    } catch (error) {
+      setFormData(initialForm);
+    } catch {
       toast({
-        title: "❌ Erro ao enviar mensagem",
-        description: "Tente novamente ou entre em contato via WhatsApp.",
+        title: "Erro ao enviar mensagem",
+        description: `Tente novamente ou fale conosco pelo WhatsApp ${contact.whatsappDisplay}.`,
         variant: "destructive",
         duration: 8000,
       });
@@ -72,125 +112,169 @@ Data: ${new Date().toLocaleString('pt-BR')}
     }
   };
 
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newsletterEmail) return;
-    
-    setIsNewsletterSubmitting(true);
-
-    try {
-      // Simular envio automático para newsletter
-      const response = await fetch('https://formspree.io/f/contato@agenciainnovation.com.br', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: newsletterEmail,
-          _subject: 'Nova inscrição na newsletter',
-          type: 'newsletter',
-        }),
-      }).catch(() => {
-        // Fallback para mailto
-        const emailBody = `
-Nova inscrição na newsletter:
-
-E-mail: ${newsletterEmail}
-
----
-Enviado via formulário de newsletter do site
-Data: ${new Date().toLocaleString('pt-BR')}
-        `.trim();
-        
-        const mailtoLink = `mailto:contato@agenciainnovation.com.br?subject=Nova inscrição na newsletter&body=${encodeURIComponent(emailBody)}`;
-        window.location.href = mailtoLink;
-        return null;
-      });
-      
-      toast({
-        variant: "success",
-        title: "🎉 Inscrito com sucesso!",
-        description: "Bem-vindo à nossa newsletter! Você receberá dicas exclusivas em breve.",
-        duration: 10000,
-      });
-      
-      setNewsletterEmail('');
-    } catch (error) {
-      toast({
-        title: "❌ Erro na inscrição",
-        description: "Tente novamente mais tarde.",
-        variant: "destructive",
-        duration: 8000,
-      });
-    } finally {
-      setIsNewsletterSubmitting(false);
-    }
-  };
+  const inputClass =
+    "bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary rounded-xl h-12";
+  const errorClass = "text-sm text-destructive mt-1";
 
   return (
-    <section id="contato" className="bg-gradient-to-br from-innovation-black via-innovation-gray/10 to-innovation-black py-0">
-      <div className="container mx-auto px-4 py-[15px]">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 animate-fade-in-up">
-            Vamos <span className="text-innovation-yellow">inovar juntos</span>?
+    <section id="contato" className="py-24 bg-card">
+      <div className="container mx-auto px-4">
+        <FadeUp className="text-center mb-16">
+          <h2
+            className="font-bold text-foreground mb-6"
+            style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
+          >
+            Vamos <span className="text-primary">inovar juntos</span>?
           </h2>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-            Entre em contato conosco e descubra como podemos transformar 
-            a presença digital da sua empresa com estratégias inovadoras.
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Entre em contato e descubra como podemos transformar a presença
+            digital da sua empresa com estratégias inovadoras.
           </p>
-        </div>
+        </FadeUp>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
-          {/* Contact Form */}
-          <div className="animate-fade-in-up" style={{animationDelay: '0.4s'}}>
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-              <h3 className="text-2xl font-bold text-white mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-6xl mx-auto">
+          {/* Formulário */}
+          <FadeUp delay={0.1}>
+            <div className="bg-background border border-border rounded-3xl p-8">
+              <h3 className="text-2xl font-bold text-foreground mb-6 font-display">
                 Envie sua mensagem
               </h3>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
+
+              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                {/* Honeypot — invisível para humanos */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute opacity-0 pointer-events-none h-0 w-0"
+                  style={{ position: "absolute", left: "-9999px" }}
+                />
+
                 <div>
+                  <label htmlFor="contact-name" className="sr-only">Nome completo</label>
                   <Input
+                    id="contact-name"
                     type="text"
                     placeholder="Seu nome completo"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-innovation-yellow rounded-xl h-12"
+                    onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                    onFocus={() => trackEvent("form_start", { form: "contato" })}
+                    className={inputClass}
+                    maxLength={100}
                   />
+                  {errors.name && <p className={errorClass}>{errors.name}</p>}
                 </div>
-                
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label htmlFor="contact-email" className="sr-only">E-mail</label>
+                    <Input
+                      id="contact-email"
+                      type="email"
+                      placeholder="Seu melhor e-mail"
+                      value={formData.email}
+                      onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                      className={inputClass}
+                      maxLength={255}
+                    />
+                    {errors.email && <p className={errorClass}>{errors.email}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="contact-whatsapp" className="sr-only">WhatsApp</label>
+                    <Input
+                      id="contact-whatsapp"
+                      type="tel"
+                      placeholder="Seu WhatsApp"
+                      value={formData.whatsapp}
+                      onChange={(e) => setFormData((p) => ({ ...p, whatsapp: e.target.value }))}
+                      className={inputClass}
+                      maxLength={20}
+                    />
+                    {errors.whatsapp && <p className={errorClass}>{errors.whatsapp}</p>}
+                  </div>
+                </div>
+
                 <div>
+                  <label htmlFor="contact-company" className="sr-only">Empresa</label>
                   <Input
-                    type="email"
-                    placeholder="Seu melhor e-mail"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-innovation-yellow rounded-xl h-12"
+                    id="contact-company"
+                    type="text"
+                    placeholder="Sua empresa"
+                    value={formData.company}
+                    onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))}
+                    className={inputClass}
+                    maxLength={100}
                   />
+                  {errors.company && <p className={errorClass}>{errors.company}</p>}
                 </div>
-                
+
                 <div>
-                  <Textarea
-                    placeholder="Conte-nos sobre seu projeto ou dúvida..."
-                    value={formData.message}
-                    onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                    required
-                    rows={5}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-innovation-yellow rounded-xl resize-none"
-                  />
+                  <label htmlFor="contact-service" className="sr-only">Serviço de interesse</label>
+                  <Select
+                    value={formData.service}
+                    onValueChange={(value) => setFormData((p) => ({ ...p, service: value }))}
+                  >
+                    <SelectTrigger id="contact-service" className={inputClass}>
+                      <SelectValue placeholder="Serviço de interesse" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      {services.map((service) => (
+                        <SelectItem key={service.id} value={service.title}>
+                          {service.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                
+
+                <div>
+                  <label htmlFor="contact-message" className="sr-only">Mensagem</label>
+                  <Textarea
+                    id="contact-message"
+                    placeholder="Conte-nos sobre seu projeto ou dúvida…"
+                    value={formData.message}
+                    onChange={(e) => setFormData((p) => ({ ...p, message: e.target.value }))}
+                    rows={5}
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary rounded-xl resize-none"
+                    maxLength={1000}
+                  />
+                  {errors.message && <p className={errorClass}>{errors.message}</p>}
+                </div>
+
+                <div>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="contact-lgpd"
+                      checked={formData.lgpd}
+                      onCheckedChange={(checked) =>
+                        setFormData((p) => ({ ...p, lgpd: checked === true }))
+                      }
+                      className="mt-1 border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                    />
+                    <label htmlFor="contact-lgpd" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                      Autorizo o contato da Agência Innovation e concordo com o
+                      tratamento dos meus dados conforme a{" "}
+                      <Link to="/privacidade" className="text-primary underline">
+                        Política de Privacidade
+                      </Link>
+                      .
+                    </label>
+                  </div>
+                  {errors.lgpd && <p className={errorClass}>{errors.lgpd}</p>}
+                </div>
+
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-innovation-yellow text-innovation-black hover:bg-innovation-yellow/90 font-semibold py-3 rounded-xl text-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl text-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 min-h-[44px] h-14 glow-yellow-sm"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-innovation-black/30 border-t-innovation-black rounded-full animate-spin mr-2" />
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
                       Enviando...
                     </>
                   ) : (
@@ -202,129 +286,97 @@ Data: ${new Date().toLocaleString('pt-BR')}
                 </Button>
               </form>
             </div>
+          </FadeUp>
 
-            {/* Newsletter */}
-            <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-4">
-                📧 Newsletter Innovation
-              </h3>
-              <p className="text-white/70 mb-6">
-                Receba dicas exclusivas, tendências do mercado e novidades sobre marketing digital.
-              </p>
-              
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  type="email"
-                  placeholder="Seu e-mail para newsletter"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  required
-                  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-innovation-yellow rounded-xl h-12"
-                />
-                <Button
-                  type="submit"
-                  disabled={isNewsletterSubmitting}
-                  className="bg-innovation-yellow text-innovation-black hover:bg-innovation-yellow/90 font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 disabled:opacity-50"
-                >
-                  {isNewsletterSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-innovation-black/30 border-t-innovation-black rounded-full animate-spin mr-2" />
-                      Enviando...
-                    </>
-                  ) : (
-                    'Inscrever-se'
-                  )}
-                </Button>
-              </form>
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div className="animate-fade-in-up" style={{animationDelay: '0.6s'}}>
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 h-fit">
-              <h3 className="text-2xl font-bold text-white mb-8">
+          {/* Outras formas de contato */}
+          <FadeUp delay={0.2}>
+            <div className="bg-background border border-border rounded-3xl p-8 h-fit">
+              <h3 className="text-2xl font-bold text-foreground mb-8 font-display">
                 Outras formas de contato
               </h3>
 
               <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-innovation-yellow rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-6 h-6 text-innovation-black" />
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div>
-                    <h4 className="text-white font-semibold mb-1">E-mail</h4>
-                    <a 
-                      href="mailto:contato@agenciainnovation.com.br"
-                      className="text-innovation-yellow hover:text-innovation-yellow/80 transition-colors duration-300"
+                    <h4 className="text-foreground font-semibold mb-1">E-mail</h4>
+                    <a
+                      href={`mailto:${contact.email}`}
+                      className="text-primary hover:text-primary/80 transition-colors duration-300"
                     >
-                      contato@agenciainnovation.com.br
+                      {contact.email}
                     </a>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-innovation-yellow rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-6 h-6 text-innovation-black" />
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div>
-                    <h4 className="text-white font-semibold mb-1">WhatsApp</h4>
-                    <a 
-                      href="https://wa.me/5511973473423"
+                    <h4 className="text-foreground font-semibold mb-1">WhatsApp</h4>
+                    <a
+                      href={whatsappLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-innovation-yellow hover:text-innovation-yellow/80 transition-colors duration-300"
+                      onClick={() => trackEvent("click_whatsapp", { location: "contato" })}
+                      className="text-primary hover:text-primary/80 transition-colors duration-300"
                     >
-                      (11) 97347-3423
+                      {contact.whatsappDisplay}
                     </a>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-innovation-yellow rounded-xl flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-innovation-black" />
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div>
-                    <h4 className="text-white font-semibold mb-1">Localização</h4>
-                    <p className="text-white/70">
-                      São Paulo, SP<br />
-                      Atendimento em todo Brasil
-                    </p>
+                    <h4 className="text-foreground font-semibold mb-1">Localização</h4>
+                    <p className="text-muted-foreground">{contact.location}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Social Media */}
-              <div className="mt-8 pt-8 border-t border-white/20">
-                <h4 className="text-white font-semibold mb-4">Siga-nos nas redes sociais</h4>
-                <div className="flex space-x-4">
-                  <a 
-                    href="https://instagram.com/agenciainnovationbr" 
-                    target="_blank" 
+              {/* Redes sociais */}
+              <div className="mt-8 pt-8 border-t border-border">
+                <h4 className="text-foreground font-semibold mb-4">
+                  Siga-nos nas redes sociais
+                </h4>
+                <div className="flex gap-4">
+                  <a
+                    href={socials.instagram}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
+                    aria-label="Instagram da Agência Innovation"
+                    className="w-12 h-12 bg-card border border-border rounded-xl flex items-center justify-center hover:border-primary hover:scale-110 transition-all duration-300"
                   >
-                    <Instagram className="w-6 h-6 text-white" />
+                    <Instagram className="w-6 h-6 text-primary" />
                   </a>
-                  <a 
-                    href="https://facebook.com/agenciainnovationbr" 
-                    target="_blank" 
+                  <a
+                    href={socials.facebook}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
+                    aria-label="Facebook da Agência Innovation"
+                    className="w-12 h-12 bg-card border border-border rounded-xl flex items-center justify-center hover:border-primary hover:scale-110 transition-all duration-300"
                   >
-                    <Facebook className="w-6 h-6 text-white" />
+                    <Facebook className="w-6 h-6 text-primary" />
                   </a>
-                  <a 
-                    href="https://linkedin.com/company/agenciainnovationbr" 
-                    target="_blank" 
+                  <a
+                    href={socials.linkedin}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="w-12 h-12 bg-blue-700 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
+                    aria-label="LinkedIn da Agência Innovation"
+                    className="w-12 h-12 bg-card border border-border rounded-xl flex items-center justify-center hover:border-primary hover:scale-110 transition-all duration-300"
                   >
-                    <Linkedin className="w-6 h-6 text-white" />
+                    <Linkedin className="w-6 h-6 text-primary" />
                   </a>
                 </div>
               </div>
             </div>
-          </div>
+          </FadeUp>
         </div>
       </div>
     </section>
