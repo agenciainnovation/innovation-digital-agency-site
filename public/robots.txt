@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://innovation-digital-agency-site.lovable.app/sitemap.xml
