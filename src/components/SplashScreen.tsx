@@ -26,7 +26,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
             alt="Agência Innovation" 
             className="w-32 h-32 mx-auto mb-4"
           />
-          <div className="text-innovation-yellow text-2xl font-bold font-poppins">
+          <div className="text-innovation-yellow text-2xl font-bold font-display">
             Agência Innovation
           </div>
         </div>
@@ -42,7 +42,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           alt="Agência Innovation" 
           className="w-32 h-32 mx-auto mb-4 animate-fade-in-up"
         />
-        <div className="text-innovation-yellow text-2xl font-bold font-poppins animate-fade-in-up">
+        <div className="text-innovation-yellow text-2xl font-bold font-display animate-fade-in-up">
           Agência Innovation
         </div>
         <div className="text-white/70 text-sm mt-2 animate-fade-in-up">
