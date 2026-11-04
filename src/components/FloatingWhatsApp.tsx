@@ -1,30 +1,17 @@
-
-import { MessageCircle } from 'lucide-react';
-
-// Declare gtag function type
-declare global {
-  interface Window {
-    gtag: (...args: any[]) => void;
-  }
-}
+import { MessageCircle } from "lucide-react";
+import { whatsappLink } from "@/data/siteData";
+import { trackEvent } from "@/lib/tracking";
 
 const FloatingWhatsApp = () => {
   const handleWhatsAppClick = () => {
-    // Track WhatsApp click event
-    if (typeof window.gtag !== 'undefined') {
-      window.gtag('event', 'click', {
-        event_category: 'Contact',
-        event_label: 'WhatsApp Floating Button',
-        transport_type: 'beacon'
-      });
-    }
-    window.open('https://wa.me/5511973473423', '_blank');
+    trackEvent("click_whatsapp", { location: "floating_button" });
+    window.open(whatsappLink, "_blank", "noopener,noreferrer");
   };
 
   return (
     <button
       onClick={handleWhatsAppClick}
-      className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 animate-pulse-slow"
+      className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-[#25D366] hover:bg-[#1fb857] rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
       aria-label="Falar no WhatsApp"
     >
       <MessageCircle className="w-8 h-8 text-white" />
